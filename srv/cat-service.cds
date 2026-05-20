@@ -7,4 +7,7 @@ service CatalogService {
   entity Products  as projection on db.Products;
   // Bound action to get a short review for a supplier (returns plain text)
   action SupplierReviews( supplier: Suppliers ) returns String;
+
+  // Unbound action to count Suppliers and Products
+  action CountEntities returns { supplierCount: Integer; productCount: Integer; };
 }

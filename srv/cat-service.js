@@ -3,6 +3,18 @@ const cds = require('@sap/cds');
 module.exports = cds.service.impl(async function() {
   const { Products, Suppliers } = this.entities;
 
+  // Unbound action handler for CountEntities
+  this.on('CountEntities', async (req) => {
+    const [supplierCount, productCount] = await Promise.all([
+      SELECT.from(Suppliers).columns('count(1) as count').then(r => r[0]?.count || 0),
+      SELECT.from(Products).columns('count(1) as count').then(r => r[0]?.count || 0)
+    ]);
+    const msg = `Suppliers: ${supplierCount}, Products: ${productCount}`;
+    console.log(msg);
+    // If running in Fiori/UI5, you can return the counts for MessageToast
+    return { supplierCount, productCount };
+  });
+
   // Before creating product(s) set discount according to price rules
   this.before('CREATE', 'Products', (req) => {
     const applyDiscount = (item) => {
