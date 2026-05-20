@@ -12,6 +12,7 @@ service CatalogService {
   // Expose Products (includes supplier association which is to-one)
   entity Products  as projection on db.Products;
   // Bound action to get a short review for a supplier (returns plain text)
-  action SupplierReviews( supplier: Suppliers ) returns String;
-  action CountEntities returns EntityCounts;
+  action supplierReviews( supplier: Suppliers ) returns String;
+
+  action countEntities( ) returns EntityCounts;
 }

@@ -4,7 +4,7 @@ module.exports = cds.service.impl(async function() {
   const { Products, Suppliers } = this.entities;
 
   // Unbound action handler for CountEntities
-  this.on('CountEntities', async (req) => {
+  this.on('countEntities', async (req) => {
     const [supplierCount, productCount] = await Promise.all([
       SELECT.from(Suppliers).columns('count(1) as count').then(r => r[0]?.count || 0),
       SELECT.from(Products).columns('count(1) as count').then(r => r[0]?.count || 0)
@@ -44,7 +44,7 @@ module.exports = cds.service.impl(async function() {
   });
 
   // Bound action handler for SupplierReviews
-  this.on('SupplierReviews', 'Suppliers', async (req) => {
+  this.on('supplierReviews', 'Suppliers', async (req) => {
     // try to determine supplier ID from request params
     let id = null;
     if (req.params) {
