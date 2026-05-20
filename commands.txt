@@ -1,1 +1,9 @@
+CREATE CAP APP
+====================================================================
+cds init suppliers
+
+RUN CAP APP
+====================================================================
+cds serve
+cds watch
 cds watch --profile hybrid
