@@ -1,4 +1,5 @@
 using CatalogService as service from '../../srv/cat-service';
+
 annotate service.Suppliers with @(
     UI.FieldGroup #GeneratedGroup : {
         $Type : 'UI.FieldGroupType',
@@ -24,6 +25,22 @@ annotate service.Suppliers with @(
             Label : 'name',
             Value : name,
         },
+        {
+            $Type : 'UI.DataFieldForAction',
+            Action : 'CatalogService.SupplierReviews',
+            Label : 'Supplier Reviews',
+            Inline : true
+        }
     ],
+);
+
+annotate CatalogService.EntityContainer with @(
+    UI.LineItem : [
+        {
+            $Type : 'UI.DataFieldForAction',
+            Action : 'CatalogService.CountEntities',
+            Label : 'Count Entities'
+        }
+    ]
 );
 
