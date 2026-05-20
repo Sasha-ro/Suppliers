@@ -3,10 +3,10 @@
 # Server: http://localhost:4006/odata/v4/catalog
 
 ### Suppliers - List all
-GET http://localhost:4006/odata/v4/catalog/Suppliers
+GET http://localhost:34601/odata/v4/catalog/Suppliers
 
 ### Suppliers - Get by ID
-GET http://localhost:4006/odata/v4/catalog/Suppliers(11111111-1111-1111-1111-111111111111)
+GET http://localhost:34601/odata/v4/catalog/Suppliers(11111111-1111-1111-1111-111111111111)
 
 ### Suppliers - Create
 POST http://localhost:4006/odata/v4/catalog/Suppliers
