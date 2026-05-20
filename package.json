@@ -21,5 +21,16 @@
   ],
   "sapux": [
     "app/project1"
-  ]
+  ],
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "impl": "@cap-js/sqlite",
+        "credentials": {
+          "url": "db/Suppliers.db"
+        }
+      }
+    }
+  }
 }
