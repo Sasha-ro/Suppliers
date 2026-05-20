@@ -1,0 +1,100 @@
+const cds = require('@sap/cds');
+
+module.exports = cds.service.impl(async function() {
+  const { Products, Suppliers } = this.entities;
+
+  // Before creating product(s) set discount according to price rules
+  this.before('CREATE', 'Products', (req) => {
+    const applyDiscount = (item) => {
+      const price = Number(item.price) || 0;
+      if (price > 100) item.discount = 15.00;
+      else if (price > 50) item.discount = 10.00;
+      else item.discount = 0.00;
+    };
+
+    if (Array.isArray(req.data)) {
+      req.data.forEach(applyDiscount);
+    } else if (req.data) {
+      applyDiscount(req.data);
+    }
+  });
+
+  // After reading product(s) log actual price after discount
+  this.after('READ', 'Products', (each) => {
+    const items = Array.isArray(each) ? each : [each];
+    items.forEach(p => {
+      if (!p) return;
+      const price = Number(p.price) || 0;
+      const discount = Number(p.discount) || 0;
+      const actual = +(price * (1 - discount / 100)).toFixed(2);
+      console.log(`Product ${p.ID || p.name}: price ${price} discount ${discount}% -> actual ${actual}`);
+    });
+  });
+
+  // Bound action handler for SupplierReviews
+  this.on('SupplierReviews', 'Suppliers', async (req) => {
+    // try to determine supplier ID from request params
+    let id = null;
+    if (req.params) {
+      id = req.params[0] || req.params.ID || Object.values(req.params)[0];
+    }
+    if (!id && req.data && req.data.supplier && req.data.supplier.ID) id = req.data.supplier.ID;
+
+    // fetch supplier to include name in prompt
+    let supplier = null;
+    if (id) {
+      supplier = await cds.run(SELECT.one.from(Suppliers).where({ ID: id }));
+    }
+
+    const supplierName = (supplier && supplier.name) ? supplier.name : (req.data && req.data.supplier && req.data.supplier.name) || 'this supplier';
+
+    // Try calling an external LLM if OPENAI_API_KEY present, otherwise generate a local fictitious review
+    const generateLocalReview = (name) => {
+      const lines = [
+        `${name} consistently delivers on time and with friendly service.`,
+        `Quality is solid — packaging and documentation are reliable.`,
+        `Communication is responsive and they handle issues professionally.`,
+        `Overall a dependable partner we enjoy working with.`
+      ];
+      return lines.join('\n');
+    };
+
+    const callLLM = async (prompt) => {
+      const key = process.env.OPENAI_API_KEY;
+      const url = process.env.OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions';
+      const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+      if (!key) return null;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 200
+          })
+        });
+        if (!res.ok) return null;
+        const body = await res.json();
+        // try common response shape
+        const content = body.choices && body.choices[0] && (body.choices[0].message?.content || body.choices[0].text);
+        return content ? content.trim() : null;
+      } catch (e) {
+        console.error('LLM call failed', e);
+        return null;
+      }
+    };
+
+    const prompt = `Write a short, friendly, fictitious 4-line customer review for supplier named "${supplierName}". Each line should be brief and distinct.`;
+
+    let review = await callLLM(prompt);
+    if (!review) review = generateLocalReview(supplierName);
+
+    // return plain string (CDS will serialize)
+    return review;
+  });
+
+});
